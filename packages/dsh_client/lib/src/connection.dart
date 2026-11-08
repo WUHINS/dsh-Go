@@ -152,6 +152,7 @@ class DshConnection {
     Uri baseUri, {
     this.hostHeader,
     this.cookie,
+    this.bearer,
     HttpClient? httpClient,
     this.connectTimeout = const Duration(seconds: 10),
     this.requestTimeout = const Duration(seconds: 120),
@@ -174,6 +175,11 @@ class DshConnection {
 
   /// Overrides the `Host` header (`host:port`); defaults to [baseUri]'s authority.
   final String? hostHeader;
+
+  /// `Authorization: Bearer` for Hosts behind an authenticating gateway
+  /// (dsh-webui-oauth device tokens). Sent on HTTP and on the WebSocket
+  /// upgrade; `null` for the stock `dsh web` launch-token flow.
+  final String? bearer;
   final Duration connectTimeout;
   final Duration requestTimeout;
   DshTracer? _tracer;
@@ -408,6 +414,7 @@ class DshConnection {
       req.persistentConnection = false;
       _applyHost(req.headers);
       if (cookie != null) req.headers.set(HttpHeaders.cookieHeader, cookie!.header);
+      _applyBearer(req.headers);
       final response = await req.close();
       if (response.statusCode >= 300 && response.statusCode < 400) {
         throw DshHttpException(response.statusCode, 'GET ${uri.path}: redirects are not followed');
@@ -449,7 +456,11 @@ class DshConnection {
   /// A missing/expired cookie fails the upgrade with HTTP 401 and a fence
   /// failure with 403; both surface as [DshHttpException].
   Future<WebSocket> connectWebSocket(String path, {Duration? timeout}) async {
-    final headers = <String, Object>{if (cookie != null) 'Cookie': cookie!.header, 'Host': ?hostHeader};
+    final headers = <String, Object>{
+      if (cookie != null) 'Cookie': cookie!.header,
+      if (bearer != null) 'Authorization': 'Bearer $bearer',
+      'Host': ?hostHeader,
+    };
     final uri = webSocketUri(path);
     var abandoned = false;
     try {
@@ -526,6 +537,7 @@ class DshConnection {
       req.followRedirects = followRedirects;
       _applyHost(req.headers);
       if (cookie != null) req.headers.set(HttpHeaders.cookieHeader, cookie!.header);
+      _applyBearer(req.headers);
       if (contentType != null) req.headers.set(HttpHeaders.contentTypeHeader, contentType);
       headers?.forEach(req.headers.set);
       if (body != null) {
@@ -571,6 +583,12 @@ class DshConnection {
     } on HandshakeException catch (error) {
       throw DshTransportException('TLS handshake failed: ${error.message}', error);
     }
+  }
+
+  void _applyBearer(HttpHeaders headers) {
+    final value = bearer;
+    if (value == null || value.isEmpty) return;
+    headers.set(HttpHeaders.authorizationHeader, 'Bearer $value');
   }
 
   void _applyHost(HttpHeaders headers) {

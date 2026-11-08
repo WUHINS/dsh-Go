@@ -199,6 +199,7 @@ class DshClient {
     String? token,
     String? launchUrl,
     DshCookie? cookie,
+    String? bearer,
     String? hostHeader,
     MuxOptions muxOptions = const MuxOptions(),
     DshTracer? tracer,
@@ -216,7 +217,7 @@ class DshClient {
       launchToken ??= parsed.token;
     }
     if (base == null) throw ArgumentError('baseUri or launchUrl is required');
-    final connection = DshConnection(base, hostHeader: hostHeader, cookie: cookie, tracer: tracer);
+    final connection = DshConnection(base, hostHeader: hostHeader, cookie: cookie, bearer: bearer, tracer: tracer);
     final client = DshClient(
       connection,
       muxOptions: muxOptions,
