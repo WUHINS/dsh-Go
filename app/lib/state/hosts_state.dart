@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/l10n.dart';
 import '../remote/link_status.dart';
+import '../remote/oauth/oauth_host_config.dart';
 import '../remote/relay/dsh_remote_backend.dart';
 import 'app_info.dart';
 import '../remote/relay/relay_backend.dart';
@@ -21,13 +22,15 @@ export '../remote/link_status.dart' show HostLinkStatus, HostLinkPhase, HostLink
 export '../remote/ssh/ssh_transport.dart' show PresentedHostKey;
 export '../remote/relay/relay_backend.dart' show RelayHost, RelayTrust, RelayUser;
 export '../remote/ssh/ssh_host_config.dart';
+export '../remote/oauth/oauth_host_config.dart';
 
-/// The three kinds of DSH host the app can talk to.
-enum HostKind { local, ssh, relay }
+/// The four kinds of DSH host the app can talk to.
+enum HostKind { local, ssh, relay, oauth }
 
-/// Identifies a host: the on-device engine, a saved SSH host, or a relay
-/// (ds-harness-remote) device. Equality is by kind + id; [name] is only a
-/// cached display name for relay hosts (their list lives on the server).
+/// Identifies a host: the on-device engine, a saved SSH host, a relay
+/// (ds-harness-remote) device, or an HTTPS host behind dsh-webui-oauth.
+/// Equality is by kind + id; [name] is only a cached display name for the
+/// kinds whose list lives elsewhere.
 class HostRef {
   const HostRef._(this.kind, this.id, [this.name]);
 
@@ -36,6 +39,8 @@ class HostRef {
   const HostRef.ssh(String id) : this._(HostKind.ssh, id);
 
   const HostRef.relay(String id, {String? name}) : this._(HostKind.relay, id, name);
+
+  const HostRef.oauth(String id, {String? name}) : this._(HostKind.oauth, id, name);
 
   final HostKind kind;
   final String id;
@@ -56,6 +61,7 @@ class HostRef {
       return switch (map['kind']) {
         'ssh' => HostRef.ssh(id),
         'relay' => HostRef.relay(id, name: name is String ? name : null),
+        'oauth' => HostRef.oauth(id, name: name is String ? name : null),
         _ => local,
       };
     } catch (_) {
@@ -78,6 +84,7 @@ String hostLabel(HostKind kind, String? name) => switch (kind) {
   HostKind.local => appL10n.commonThisPhone,
   HostKind.ssh => '${_short(name ?? appL10n.stateSshHost)} · SSH',
   HostKind.relay => appL10n.stateHostRemoteLabel(_short(name ?? appL10n.commonRemoteHost)),
+  HostKind.oauth => '${_short(name ?? appL10n.remoteOauthHost)} · OAuth',
 };
 
 String _short(String name) {
@@ -93,9 +100,10 @@ final secretStoreProvider = Provider<SecretStore>((ref) => SecureSecretStore());
 // ── Saved SSH hosts ──────────────────────────────────────────────────────────
 
 class HostsState {
-  const HostsState({this.ssh = const [], this.loaded = false});
+  const HostsState({this.ssh = const [], this.oauth = const [], this.loaded = false});
 
   final List<SshHostConfig> ssh;
+  final List<OauthHostConfig> oauth;
   final bool loaded;
 
   SshHostConfig? sshById(String id) {
@@ -104,11 +112,20 @@ class HostsState {
     }
     return null;
   }
+
+  OauthHostConfig? oauthById(String id) {
+    for (final h in oauth) {
+      if (h.id == id) return h;
+    }
+    return null;
+  }
 }
 
-/// Saved SSH hosts: configs in SharedPreferences, secrets in [SecretStore].
+/// Saved remote hosts (SSH and OAuth): configs in SharedPreferences, secrets
+/// in [SecretStore].
 class HostsController extends Notifier<HostsState> {
   static const prefsKey = 'remote_ssh_hosts';
+  static const oauthPrefsKey = 'remote_oauth_hosts';
 
   SecretStore get _secrets => ref.read(secretStoreProvider);
   late Future<void> _loaded;
@@ -125,6 +142,7 @@ class HostsController extends Notifier<HostsState> {
 
   Future<void> _load() async {
     var hosts = const <SshHostConfig>[];
+    var oauth = const <OauthHostConfig>[];
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(prefsKey);
@@ -132,17 +150,32 @@ class HostsController extends Notifier<HostsState> {
         final list = jsonDecode(raw);
         if (list is List) hosts = list.map(SshHostConfig.fromJson).whereType<SshHostConfig>().toList();
       }
+      final rawOauth = prefs.getString(oauthPrefsKey);
+      if (rawOauth != null) {
+        final list = jsonDecode(rawOauth);
+        if (list is List) oauth = list.map(OauthHostConfig.fromJson).whereType<OauthHostConfig>().toList();
+      }
     } catch (_) {
       // No preferences backend (tests) or a corrupt entry: start empty.
     }
-    state = HostsState(ssh: hosts, loaded: true);
+    state = HostsState(ssh: hosts, oauth: oauth, loaded: true);
   }
 
   Future<bool> _persist(List<SshHostConfig> hosts) async {
-    state = HostsState(ssh: List.unmodifiable(hosts), loaded: true);
+    state = HostsState(ssh: List.unmodifiable(hosts), oauth: state.oauth, loaded: true);
     try {
       final prefs = await SharedPreferences.getInstance();
       return await prefs.setString(prefsKey, jsonEncode([for (final h in hosts) h.toJson()]));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _persistOauth(List<OauthHostConfig> hosts) async {
+    state = HostsState(ssh: state.ssh, oauth: List.unmodifiable(hosts), loaded: true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return await prefs.setString(oauthPrefsKey, jsonEncode([for (final h in hosts) h.toJson()]));
     } catch (_) {
       return false;
     }
@@ -214,6 +247,46 @@ class HostsController extends Notifier<HostsState> {
       } catch (_) {}
     }
     unawaited(ref.read(activeHostProvider.notifier).forget((h) => h == HostRef.ssh(id)));
+  }
+
+  /// Adds or replaces an OAuth Host. [token] is written when given (a first
+  /// authorization or a re-authorization); otherwise the stored one stays.
+  Future<bool> saveOauth(OauthHostConfig config, {String? token}) async {
+    await _loaded;
+    ref.read(readListCredentialEpochProvider.notifier).advance();
+    if (token != null && token.isNotEmpty) {
+      try {
+        await _secrets.write(OauthSecrets.tokenKey(config.id), token);
+      } catch (_) {}
+    }
+    final hosts = [...state.oauth];
+    final index = hosts.indexWhere((h) => h.id == config.id);
+    if (index >= 0) {
+      hosts[index] = config;
+    } else {
+      hosts.add(config);
+    }
+    return _persistOauth(hosts);
+  }
+
+  Future<String?> loadOauthToken(String id) async {
+    await _loaded;
+    try {
+      return await _secrets.read(OauthSecrets.tokenKey(id));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Removes the host and its device token. The token itself is not revoked
+  /// on the Host: that needs a browser session there (设置 → 身份认证).
+  Future<void> removeOauth(String id) async {
+    await _loaded;
+    await _persistOauth([...state.oauth.where((h) => h.id != id)]);
+    try {
+      await _secrets.delete(OauthSecrets.tokenKey(id));
+    } catch (_) {}
+    unawaited(ref.read(activeHostProvider.notifier).forget((h) => h == HostRef.oauth(id)));
   }
 
   /// Trust on first use: remembers the key the person accepted.

@@ -171,6 +171,19 @@ class _WebHomeState extends ConsumerState<WebHome> {
         link: _link,
         onSession: _onSession,
       ),
+      UrlDshWeb(:final url, :final hostName) => WebViewPage(
+        key: ValueKey((url, phoneLayout)),
+        url: url,
+        title: context.l10n.webTitle,
+        subtitle: hostName,
+        reloadAfterBackground: const Duration(seconds: 60),
+        dshWeb: true,
+        phoneLayout: phoneLayout,
+        leading: _handle,
+        root: true,
+        link: _link,
+        onSession: _onSession,
+      ),
       NoDshWeb(:final reason) => _NoWeb(reason: reason, handle: _handle),
     };
     return ChatAlertHost(

@@ -9148,6 +9148,87 @@ class L10nZh extends L10n {
   String get nearbyChange => '更换';
 
   @override
+  String get remoteOauthHosts => '网页登录';
+
+  @override
+  String get remoteOauthHost => '网页登录主机';
+
+  @override
+  String get remoteOauthAdd => '添加网页登录主机';
+
+  @override
+  String get remoteOauthRequirements => '主机已安装 dsh-webui-oauth 0.8.3 或更新版本，并通过 HTTPS 访问；只有内网 IP 可以使用 HTTP';
+
+  @override
+  String get remoteOauthAddress => '主机地址';
+
+  @override
+  String get remoteOauthAddressHint => 'https://dsh.example.com';
+
+  @override
+  String get remoteOauthAddressInvalid => '地址无效';
+
+  @override
+  String get remoteOauthHttpOnlyLocal => '只有内网 IP 可以使用 HTTP，其他地址请用 HTTPS';
+
+  @override
+  String get remoteOauthNameHint => '家里的电脑';
+
+  @override
+  String get remoteOauthStart => '开始授权';
+
+  @override
+  String get remoteOauthStarting => '正在请求设备授权';
+
+  @override
+  String get remoteOauthWaiting => '等待批准';
+
+  @override
+  String get remoteOauthWaitingHint => '在主机上打开审批页，确认下面的代码';
+
+  @override
+  String get remoteOauthUserCode => '授权代码';
+
+  @override
+  String get remoteOauthOpenBrowser => '打开审批页';
+
+  @override
+  String get remoteOauthApproved => '已授权';
+
+  @override
+  String get remoteOauthDenied => '授权被拒绝';
+
+  @override
+  String get remoteOauthExpired => '授权码已过期，请重新开始';
+
+  @override
+  String get remoteOauthRevoked => '设备令牌已失效，请在主机上重新授权';
+
+  @override
+  String get remoteOauthCoreUnavailable => '主机无法为这台设备建立会话';
+
+  @override
+  String get remoteOauthPluginMissing => '主机没有安装 dsh-webui-oauth，或版本低于 0.8.3';
+
+  @override
+  String get remoteOauthSessionRejected => '主机拒绝了会话，请检查地址和反向代理的 Host 设置';
+
+  @override
+  String get remoteOauthSessionExpired => '会话已失效，正在重新建立';
+
+  @override
+  String get remoteOauthConnecting => '正在建立会话';
+
+  @override
+  String get remoteOauthDelete => '删除这台主机';
+
+  @override
+  String get remoteOauthDeleteConfirm => '只删除手机上的设置和设备令牌；主机上的设备记录需要在那里吊销';
+
+  @override
+  String get remoteOauthHostHeader => 'Host 头';
+
+  @override
   String get performanceTitle => '性能';
 
   @override

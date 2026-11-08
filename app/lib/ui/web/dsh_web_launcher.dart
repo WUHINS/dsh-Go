@@ -33,6 +33,13 @@ final class SshDshWeb extends DshWebAccess {
   final String hostName;
 }
 
+/// An OAuth Host: its public HTTPS origin, with the WebUI's own sign-in.
+final class UrlDshWeb extends DshWebAccess {
+  const UrlDshWeb(this.url, this.hostName);
+  final Uri url;
+  final String hostName;
+}
+
 /// No web page for this host right now; [reason] says why.
 final class NoDshWeb extends DshWebAccess {
   const NoDshWeb(this.reason);
@@ -47,6 +54,10 @@ final dshWebAccessProvider = Provider.autoDispose<DshWebAccess>((ref) {
       return const LocalDshWeb();
     case HostKind.relay:
       return NoDshWeb(appL10n.webRelayUnavailable);
+    case HostKind.oauth:
+      final config = ref.watch(hostsProvider).oauthById(host.id);
+      if (config == null) return NoDshWeb(appL10n.webConnectHostFirst(appL10n.remoteOauthHost));
+      return UrlDshWeb(config.baseUri, config.name);
     case HostKind.ssh:
       // Rebuild once the link connects (or reconnects to a new process).
       ref.watch(hostLinkStatusProvider(host));
@@ -101,6 +112,16 @@ void openDshWeb(BuildContext context, WidgetRef ref, {DshWebTarget target = cons
         subtitle: hostName,
         externalDisabledReason: context.l10n.webSshAppOnly,
         // Android suspends the page in the background and its socket drops.
+        reloadAfterBackground: const Duration(seconds: 60),
+        dshWeb: true,
+        phoneLayout: ref.read(settingsProvider).webPhoneLayout,
+        openTarget: target,
+      );
+    case UrlDshWeb(:final url, :final hostName):
+      page = WebViewPage(
+        url: url,
+        title: context.l10n.webTitle,
+        subtitle: hostName,
         reloadAfterBackground: const Duration(seconds: 60),
         dshWeb: true,
         phoneLayout: ref.read(settingsProvider).webPhoneLayout,

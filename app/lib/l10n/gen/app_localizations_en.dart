@@ -9628,6 +9628,90 @@ class L10nEn extends L10n {
   String get nearbyChange => 'Change';
 
   @override
+  String get remoteOauthHosts => 'Web sign-in';
+
+  @override
+  String get remoteOauthHost => 'Web sign-in host';
+
+  @override
+  String get remoteOauthAdd => 'Add a web sign-in host';
+
+  @override
+  String get remoteOauthRequirements =>
+      'The Host runs dsh-webui-oauth 0.8.3 or newer and is reached over HTTPS; only local-network IP addresses may use HTTP';
+
+  @override
+  String get remoteOauthAddress => 'Host address';
+
+  @override
+  String get remoteOauthAddressHint => 'https://dsh.example.com';
+
+  @override
+  String get remoteOauthAddressInvalid => 'Invalid address';
+
+  @override
+  String get remoteOauthHttpOnlyLocal => 'HTTP is only allowed for local-network IP addresses; use HTTPS';
+
+  @override
+  String get remoteOauthNameHint => 'Computer at home';
+
+  @override
+  String get remoteOauthStart => 'Start authorization';
+
+  @override
+  String get remoteOauthStarting => 'Requesting device authorization';
+
+  @override
+  String get remoteOauthWaiting => 'Waiting for approval';
+
+  @override
+  String get remoteOauthWaitingHint => 'Open the approval page on the Host and confirm the code below';
+
+  @override
+  String get remoteOauthUserCode => 'Authorization code';
+
+  @override
+  String get remoteOauthOpenBrowser => 'Open approval page';
+
+  @override
+  String get remoteOauthApproved => 'Authorized';
+
+  @override
+  String get remoteOauthDenied => 'Authorization denied';
+
+  @override
+  String get remoteOauthExpired => 'The code expired; start again';
+
+  @override
+  String get remoteOauthRevoked => 'The device token is no longer valid; authorize again on the Host';
+
+  @override
+  String get remoteOauthCoreUnavailable => 'The Host could not open a session for this device';
+
+  @override
+  String get remoteOauthPluginMissing => 'The Host does not run dsh-webui-oauth, or is older than 0.8.3';
+
+  @override
+  String get remoteOauthSessionRejected =>
+      'The Host rejected the session; check the address and the reverse proxy\'s Host setting';
+
+  @override
+  String get remoteOauthSessionExpired => 'The session expired; reconnecting';
+
+  @override
+  String get remoteOauthConnecting => 'Opening a session';
+
+  @override
+  String get remoteOauthDelete => 'Remove this host';
+
+  @override
+  String get remoteOauthDeleteConfirm =>
+      'Only this phone\'s settings and device token are removed; revoke the device on the Host separately';
+
+  @override
+  String get remoteOauthHostHeader => 'Host header';
+
+  @override
   String get performanceTitle => 'Performance';
 
   @override

@@ -89,5 +89,5 @@ EventChannel `dsh/runtime/events`，事件 map：
 
 - 运行时解压方式与具体 proot 参数：`runtime/` 与 `app/android/` 的运行时代码
 - API 细节：`packages/dsh_client/`
-- 远程接入方式：`packages/dsh_remote/`
+- 远程接入方式：`packages/dsh_remote/`（DSH Remote 中继/WebRTC）、`packages/dsh_oauth/` + `app/lib/remote/oauth/`（dsh-webui-oauth 设备令牌 + 核心会话）、`app/lib/remote/ssh/`（SSH 隧道）
 - 设计规范：`docs/design/`

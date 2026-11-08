@@ -244,5 +244,13 @@ final readListIdentityProvider = Provider<ReadListIdentity?>((ref) {
         host.harnessVersion,
         epoch,
       ]);
+    case HostKind.oauth:
+      final hosts = ref.watch(hostsProvider);
+      final host = hosts.oauthById(selected.id);
+      if (!hosts.loaded || host == null) return null;
+      if (host.connectionKey.length > 8192 || host.id.length > 256 || (host.deviceId?.length ?? 0) > 256) {
+        return null;
+      }
+      return ReadListIdentity.of(['oauth', host.id, host.connectionKey, host.deviceId, epoch]);
   }
 });

@@ -72,6 +72,20 @@ The host needs SSH enabled and DSH installed (`npm i -g @deepseek-ai/dsh`).
 
 Testing starts DSH on the host, and it keeps running afterwards. To change or delete a host, tap **Edit** next to it to open **Edit host**; **Delete this host** is at the bottom. Deleting removes only the settings, password and key saved on this phone; DSH and chats on the host stay.
 
+## Web sign-in host
+
+When the Host runs [dsh-webui-oauth](https://github.com/WU-HINS/dsh-webui-oauth) 0.8.3 or newer and the phone can reach it, no SSH is needed:
+
+1. On the remote hosts page, tap **Add a web sign-in host**.
+2. Enter the address. A public address must be `https://`; only local-network IPs may use `http://` (10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, 100.64/10, and IPv6 ULA / link-local).
+3. Tap **Start authorization**. The app shows a short code and opens the Host's approval page.
+4. Confirm the code in a browser already signed in on that Host; the app stores the device token it receives.
+5. If a reverse proxy rewrites `Host`, put the authority it forwards to DSH (for example `127.0.0.1:3080`) in the **Host** field.
+
+The device token stays on this phone; each connection asks the Host for a fresh DSH session cookie. Revoke the token at any time in the Host's own authentication settings. Changing the address requires authorizing again.
+
+This reaches the full `dsh web`: attachments, workspace uploads, the web UI, plugin settings and conversation export all work. It does not traverse NAT — the Host must be reachable from the phone (public server, port forwarding or a tunnel).
+
 ## DSH Remote
 
 No network setup, end-to-end encrypted. Good for computers on another network.

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/l10n.dart';
 import '../remote/link_status.dart';
+import '../remote/oauth/oauth_link.dart';
 import '../remote/network_watch.dart';
 import '../remote/relay/relay_backend.dart';
 import '../remote/ssh/ssh_link.dart';
@@ -178,6 +179,21 @@ final sshLinkFactoryProvider = Provider<SshLinkFactory>(
   },
 );
 
+/// Builds the link for one OAuth Host. Overridable so tests can inject a fake
+/// device client (the device flow itself is in `packages/dsh_oauth`).
+typedef OauthLinkFactory = OauthHostLink Function(Ref ref, OauthHostConfig config);
+
+final oauthLinkFactoryProvider = Provider<OauthLinkFactory>(
+  (ref) => (ref, config) {
+    final hosts = ref.read(hostsProvider.notifier);
+    return OauthHostLink(
+      config: config,
+      loadToken: () => hosts.loadOauthToken(config.id),
+      kicks: ref.read(networkKicksProvider),
+    );
+  },
+);
+
 /// The live link to a remote host; null for 本机 or an unknown host. Kept while
 /// something watches it (the active connection, a status row); closed after.
 final hostLinkProvider = Provider.autoDispose.family<HostLink?, HostRef>((ref, host) {
@@ -193,6 +209,16 @@ final hostLinkProvider = Provider.autoDispose.family<HostLink?, HostRef>((ref, h
       final link = ref.read(sshLinkFactoryProvider)(ref, config);
       // Renames, cwd and re-pinned keys apply in place.
       ref.listen(hostsProvider.select((s) => s.sshById(host.id)), (_, next) {
+        if (next != null && next.connectionKey == link.config.connectionKey) link.updateConfig(next);
+      });
+      ref.onDispose(() => unawaited(link.close()));
+      return link;
+    case HostKind.oauth:
+      final key = ref.watch(hostsProvider.select((s) => s.oauthById(host.id)?.connectionKey));
+      if (key == null) return null;
+      final config = ref.read(hostsProvider).oauthById(host.id)!;
+      final link = ref.read(oauthLinkFactoryProvider)(ref, config);
+      ref.listen(hostsProvider.select((s) => s.oauthById(host.id)), (_, next) {
         if (next != null && next.connectionKey == link.config.connectionKey) link.updateConfig(next);
       });
       ref.onDispose(() => unawaited(link.close()));
@@ -243,6 +269,7 @@ final hostNameProvider = Provider.autoDispose.family<String?, HostRef>((ref, hos
     HostKind.local => appL10n.commonThisPhone,
     HostKind.ssh => ref.watch(hostsProvider.select((s) => s.sshById(host.id)?.name)),
     HostKind.relay => ref.watch(relayAccountProvider.select((a) => a.value?.hostById(host.id)?.name)) ?? host.name,
+    HostKind.oauth => ref.watch(hostsProvider.select((s) => s.oauthById(host.id)?.name)),
   };
 });
 
@@ -542,6 +569,7 @@ AsyncValue<HostConnection?> _connectionForHost(Ref ref, HostRef host) {
       if (!loaded) return const AsyncLoading();
       return ref.watch(remoteConnectionProvider(host));
     case HostKind.relay:
+    case HostKind.oauth:
       return ref.watch(remoteConnectionProvider(host));
   }
 }

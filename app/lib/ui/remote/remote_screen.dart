@@ -24,6 +24,7 @@ import 'host_key_dialog.dart';
 import 'host_status.dart';
 import 'link_progress.dart';
 import 'network_details_sheet.dart';
+import 'oauth_host_form.dart';
 import 'relay_credit.dart';
 import 'relay_login_sheet.dart';
 import 'ssh_host_form.dart';
@@ -83,10 +84,19 @@ class RemoteScreen extends ConsumerWidget {
     if (nothingHere && ref.read(activeHostProvider).isLocal) await _use(context, ref, HostRef.ssh(saved.id));
   }
 
+  Future<void> _addOauth(BuildContext context, WidgetRef ref) async {
+    final saved = await Navigator.of(context)
+        .push<OauthHostConfig>(MaterialPageRoute(builder: (_) => const OauthHostFormPage()));
+    if (saved == null || !context.mounted) return;
+    final nothingHere = ref.read(localRuntimeProvider).status.runtimeMissing;
+    if (nothingHere && ref.read(activeHostProvider).isLocal) await _use(context, ref, HostRef.oauth(saved.id));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final ssh = ref.watch(hostsProvider.select((s) => s.ssh));
+    final oauth = ref.watch(hostsProvider.select((s) => s.oauth));
     final active = ref.watch(activeHostProvider);
     final signedIn = ref.watch(relayAccountProvider.select((a) => a.value?.signedIn ?? false));
     void push(Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
@@ -126,6 +136,26 @@ class RemoteScreen extends ConsumerWidget {
               spot: Spots.addSshHost,
               subtitle: ssh.isEmpty ? l10n.remoteSshDirect : null,
               onTap: () => unawaited(_addSsh(context, ref)),
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: l10n.remoteOauthHosts,
+          footer: Text(l10n.remoteOauthRequirements),
+          children: [
+            for (final h in oauth)
+              _OauthRow(
+                config: h,
+                active: active == HostRef.oauth(h.id),
+                onTap: () => _use(context, ref, HostRef.oauth(h.id)),
+                onEdit: () => push(OauthHostFormPage(existing: h)),
+              ),
+            SettingsTile(
+              icon: AppIcons.add,
+              tinted: false,
+              title: l10n.remoteOauthAdd,
+              subtitle: oauth.isEmpty ? l10n.remoteOauthRequirements : null,
+              onTap: () => unawaited(_addOauth(context, ref)),
             ),
           ],
         ),
@@ -180,6 +210,7 @@ class _ActiveCard extends ConsumerWidget {
     // check (relay) instead.
     final needsLogin = active.kind == HostKind.relay && error?.kind == HostLinkErrorKind.notLoggedIn;
     final needsSettings = ssh != null && error != null && !error.retryable;
+    final needsOauth = active.kind == HostKind.oauth && error != null && !error.retryable;
     final needsTrust =
         active.kind == HostKind.relay &&
         (error?.kind == HostLinkErrorKind.hostKeyMismatch || error?.kind == HostLinkErrorKind.hostKeyUnverified);
@@ -226,6 +257,15 @@ class _ActiveCard extends ConsumerWidget {
                           await ref.read(relayAccountProvider.notifier).login();
                           if (context.mounted && (ref.read(relayAccountProvider).value?.signedIn ?? false)) reconnect();
                         },
+                      )
+                    : needsOauth
+                    ? (
+                        l10n.remoteSignInAgain,
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => OauthHostFormPage(existing: ref.read(hostsProvider).oauthById(active.id)),
+                          ),
+                        ),
                       )
                     : needsSettings
                     ? (
@@ -357,6 +397,38 @@ class _SshRow extends ConsumerWidget {
       inMutuallyExclusiveGroup: true,
       child: SettingsTile(
         icon: hostKindIcon(HostKind.ssh),
+        tinted: false,
+        title: config.name,
+        subtitle: config.address,
+        onTap: onTap,
+        value: view == null ? null : _HostState(view),
+        trailing: _EdgeIconButton(
+          icon: const Icon(AppIcons.configure, size: 20),
+          tooltip: l10n.commonEdit,
+          onPressed: onEdit,
+        ),
+      ),
+    );
+  }
+}
+
+class _OauthRow extends ConsumerWidget {
+  const _OauthRow({required this.config, required this.active, required this.onTap, required this.onEdit});
+
+  final OauthHostConfig config;
+  final bool active;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final view = active ? watchHostStatus(ref, HostRef.oauth(config.id)) : null;
+    return Semantics(
+      selected: active,
+      inMutuallyExclusiveGroup: true,
+      child: SettingsTile(
+        icon: hostKindIcon(HostKind.oauth),
         tinted: false,
         title: config.name,
         subtitle: config.address,

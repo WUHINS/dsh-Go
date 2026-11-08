@@ -16850,6 +16850,168 @@ abstract class L10n {
   /// **'更换'**
   String get nearbyChange;
 
+  /// No description provided for @remoteOauthHosts.
+  ///
+  /// In zh, this message translates to:
+  /// **'网页登录'**
+  String get remoteOauthHosts;
+
+  /// No description provided for @remoteOauthHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'网页登录主机'**
+  String get remoteOauthHost;
+
+  /// No description provided for @remoteOauthAdd.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加网页登录主机'**
+  String get remoteOauthAdd;
+
+  /// No description provided for @remoteOauthRequirements.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机已安装 dsh-webui-oauth 0.8.3 或更新版本，并通过 HTTPS 访问；只有内网 IP 可以使用 HTTP'**
+  String get remoteOauthRequirements;
+
+  /// No description provided for @remoteOauthAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机地址'**
+  String get remoteOauthAddress;
+
+  /// No description provided for @remoteOauthAddressHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'https://dsh.example.com'**
+  String get remoteOauthAddressHint;
+
+  /// No description provided for @remoteOauthAddressInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'地址无效'**
+  String get remoteOauthAddressInvalid;
+
+  /// No description provided for @remoteOauthHttpOnlyLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'只有内网 IP 可以使用 HTTP，其他地址请用 HTTPS'**
+  String get remoteOauthHttpOnlyLocal;
+
+  /// No description provided for @remoteOauthNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'家里的电脑'**
+  String get remoteOauthNameHint;
+
+  /// No description provided for @remoteOauthStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始授权'**
+  String get remoteOauthStart;
+
+  /// No description provided for @remoteOauthStarting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在请求设备授权'**
+  String get remoteOauthStarting;
+
+  /// No description provided for @remoteOauthWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待批准'**
+  String get remoteOauthWaiting;
+
+  /// No description provided for @remoteOauthWaitingHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'在主机上打开审批页，确认下面的代码'**
+  String get remoteOauthWaitingHint;
+
+  /// No description provided for @remoteOauthUserCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'授权代码'**
+  String get remoteOauthUserCode;
+
+  /// No description provided for @remoteOauthOpenBrowser.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开审批页'**
+  String get remoteOauthOpenBrowser;
+
+  /// No description provided for @remoteOauthApproved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已授权'**
+  String get remoteOauthApproved;
+
+  /// No description provided for @remoteOauthDenied.
+  ///
+  /// In zh, this message translates to:
+  /// **'授权被拒绝'**
+  String get remoteOauthDenied;
+
+  /// No description provided for @remoteOauthExpired.
+  ///
+  /// In zh, this message translates to:
+  /// **'授权码已过期，请重新开始'**
+  String get remoteOauthExpired;
+
+  /// No description provided for @remoteOauthRevoked.
+  ///
+  /// In zh, this message translates to:
+  /// **'设备令牌已失效，请在主机上重新授权'**
+  String get remoteOauthRevoked;
+
+  /// No description provided for @remoteOauthCoreUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机无法为这台设备建立会话'**
+  String get remoteOauthCoreUnavailable;
+
+  /// No description provided for @remoteOauthPluginMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机没有安装 dsh-webui-oauth，或版本低于 0.8.3'**
+  String get remoteOauthPluginMissing;
+
+  /// No description provided for @remoteOauthSessionRejected.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机拒绝了会话，请检查地址和反向代理的 Host 设置'**
+  String get remoteOauthSessionRejected;
+
+  /// No description provided for @remoteOauthSessionExpired.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话已失效，正在重新建立'**
+  String get remoteOauthSessionExpired;
+
+  /// No description provided for @remoteOauthConnecting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在建立会话'**
+  String get remoteOauthConnecting;
+
+  /// No description provided for @remoteOauthDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除这台主机'**
+  String get remoteOauthDelete;
+
+  /// No description provided for @remoteOauthDeleteConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'只删除手机上的设置和设备令牌；主机上的设备记录需要在那里吊销'**
+  String get remoteOauthDeleteConfirm;
+
+  /// No description provided for @remoteOauthHostHeader.
+  ///
+  /// In zh, this message translates to:
+  /// **'Host 头'**
+  String get remoteOauthHostHeader;
+
   /// No description provided for @performanceTitle.
   ///
   /// In zh, this message translates to:
