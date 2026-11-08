@@ -280,4 +280,25 @@ void main() {
       );
     },
   );
+
+  test('host override rides on every plugin request', () async {
+    final overridden = OauthDeviceClient(
+      host.baseUri,
+      hostHeader: 'dsh.example.test',
+    );
+    addTearDown(overridden.close);
+    host.on('/dsh-webui-oauth/device/authorize', [
+      _Reply(200, {
+        'device_code': 'dc',
+        'user_code': 'ABCD',
+        'verification_uri': 'https://dsh.example.test/dsh-webui-oauth/device',
+        'expires_in': 600,
+        'interval': 5,
+      }),
+    ]);
+
+    await overridden.authorize(clientName: 'x');
+
+    expect(host.requests.single.headers['host'], 'dsh.example.test');
+  });
 }

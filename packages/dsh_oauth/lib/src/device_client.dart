@@ -89,9 +89,11 @@ class OauthException implements Exception {
 class OauthDeviceClient {
   OauthDeviceClient(
     Uri baseUri, {
+    String? hostHeader,
     HttpClient? httpClient,
     Duration timeout = const Duration(seconds: 15),
   }) : baseUri = baseUri.replace(path: '', query: null, fragment: null),
+       _hostHeader = hostHeader,
        _http = httpClient ?? HttpClient(),
        _ownsHttp = httpClient == null,
        _timeout = timeout {
@@ -111,6 +113,11 @@ class OauthDeviceClient {
 
   /// Origin only; every plugin endpoint is registered at the server root.
   final Uri baseUri;
+
+  /// Host header override for a reverse proxy that rewrites it. Every plugin
+  /// request carries it, so core-session mints the cookie for the same
+  /// authority the client presents afterwards.
+  final String? _hostHeader;
   final HttpClient _http;
   final bool _ownsHttp;
   final Duration _timeout;
@@ -218,6 +225,9 @@ class OauthDeviceClient {
         ..persistentConnection = false
         ..headers.contentType = ContentType.json
         ..headers.set(HttpHeaders.acceptHeader, 'application/json');
+      if (_hostHeader != null) {
+        request.headers.set(HttpHeaders.hostHeader, _hostHeader);
+      }
       if (bearer != null) {
         request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $bearer');
       }

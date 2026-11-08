@@ -45,7 +45,7 @@ class OauthHostLink implements HostLink {
     Backoff? backoff,
     this.keepAliveInterval = const Duration(seconds: 25),
     this.keepAliveTimeout = const Duration(seconds: 8),
-  }) : _clientFactory = clientFactory ?? OauthDeviceClient.new,
+  }) : _clientFactory = clientFactory ?? ((uri) => OauthDeviceClient(uri, hostHeader: _config.hostHeader)),
        _connectClient = connectClient ?? _defaultConnector,
        _backoff = backoff ?? Backoff() {
     _kickSub = kicks?.listen((_) => kick());
