@@ -1,0 +1,19 @@
+name: dsh_oauth
+description: >-
+  Pure-Dart client for the dsh-webui-oauth device flow: RFC 8628 device
+  authorization, the Bearer access token, and the core launch-cookie bridge
+  (`/dsh-webui-oauth/device/core-session`) that lets a native client reach a
+  DSH Host behind the WebUI auth gate with the same DshClient API.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  dsh_client:
+    path: ../dsh_client
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0
